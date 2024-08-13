@@ -4,7 +4,50 @@ Goal is to extract a list of Van Gogh paintings from the attached Google search 
 
 ![Van Gogh paintings](https://github.com/serpapi/code-challenge/blob/master/files/van-gogh-paintings.png?raw=true "Van Gogh paintings")
 
-## Instructions
+My soluton also handles for new Google search result's carousel and multiple carousel items sharing the same thumbnail.
+
+![US Presidents](https://github.com/michaeltoohig/serpapi-code-challenge/blob/master/files/us-presidents.html "US Presidents")
+
+![VU Prime Ministers](https://github.com/michaeltoohig/serpapi-code-challenge/blob/master/files/vu-prime-ministers.html "VU Prime Ministers")
+
+> Notice Sato Kilman is repeated multiple times.
+
+## Running
+
+First install dependencies from `pyproject.toml` with [Poetry](https://python-poetry.org).
+
+```sh
+poetry env use 3.11
+poetry install
+```
+
+The code can be run via the `google-carousel-scraper` command which expects a path to an HTML file and a path for the JSON output.
+
+```sh
+poetry run google-carousel-scraper ./files/van-gogh-paintings.html ./van-gogh-paintings.json
+poetry run google-carousel-scraper ./files/us-presidents.html ./us-presidents.json
+poetry run google-carousel-scraper ./files/vu-prime-ministers.html ./vu-prime-ministers.json
+```
+
+Of course if you first `poetry shell` to activate the local virtual environment then you can drop the `poetry run` at the beginning of each command.
+
+### JSON Output Note
+
+The provided `expected-array.json` file begins with a naked key `artworks` which is not valid JSON for the Python `json` library so I could not write my JSON output in the exact same way as demonstrated without some hacky file manipulation.
+So I did not include the envelope key in my JSON output.
+Instead I return just an array of carousel item objects.
+
+I was advised via email this was okay and the expected path I should follow by Emirhan Akdeniz.
+
+## Testing
+
+Testing the code is done with [Pytest](https://pytest.org).
+
+```sh
+poetry run pytest
+```
+
+## Original Instructions
 
 This is already fully supported on SerpApi. ([relevant test], [html file], [sample json], and [expected array].)
 Try to come up with your own solution and your own test.
