@@ -12,6 +12,9 @@ beautifulsoup4 = "^4.12.3"
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.2"
 
+[tool.poetry.scripts]
+google-carousel-scraper = "serpapi_code_challenge.scraper:main"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
