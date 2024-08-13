@@ -6,11 +6,11 @@ Goal is to extract a list of Van Gogh paintings from the attached Google search 
 
 My soluton also handles for new Google search result's carousel and multiple carousel items sharing the same thumbnail.
 
-![US Presidents](https://github.com/michaeltoohig/serpapi-code-challenge/blob/master/files/us-presidents.html "US Presidents")
-
-![VU Prime Ministers](https://github.com/michaeltoohig/serpapi-code-challenge/blob/master/files/vu-prime-ministers.html "VU Prime Ministers")
+![US Presidents](https://github.com/michaeltoohig/serpapi-code-challenge/blob/master/files/us-presidents.jpg?raw=true "US Presidents")
 
 > Notice Sato Kilman is repeated multiple times.
+
+![VU Prime Ministers](https://github.com/michaeltoohig/serpapi-code-challenge/blob/master/files/vu-prime-ministers.jpg?raw=true "VU Prime Ministers")
 
 ## Running
 
