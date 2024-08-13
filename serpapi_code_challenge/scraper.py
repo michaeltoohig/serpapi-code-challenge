@@ -1,10 +1,14 @@
 import re
 import json
 import argparse
+import logging
 from dataclasses import asdict, dataclass, field
 from typing import Union
 
 from bs4 import BeautifulSoup, Tag
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class DropEmptyArrayEncoder(json.JSONEncoder):
@@ -42,11 +46,15 @@ def gather_carousel_image_sources(soup):
     pattern = r"\(function\s*\(\)\s*{\s*var\s*s\s*=\s*'(.*?)';\s*var ii\s*=\s*\[(.*?)\]"
 
     script_tags = soup.find_all("script", string=re.compile("_setImagesSrc"))
+    logger.debug(
+        f"Gathered {len(script_tags)} script tags containing '_setImagesSrc' function"
+    )
     for script_tag in script_tags:
         matches = re.findall(pattern, script_tag.string)
         for b64img, img_ids_str in matches:
             # separates the string of a JS array of image IDs into a list.
             for img_id in re.findall(r"'([^']*)'", img_ids_str):
+                logger.debug(f"Gathered thumbnail for image ID {img_id}")
                 images[img_id] = b64img
 
     return images
@@ -56,16 +64,20 @@ def gather_carousel_item_tags(soup) -> list[Tag]:
     """Returns a list of `a` tags from a `g-scrolling-carousel`."""
     appbar = soup.find(id="appbar")
     if not appbar:
+        logger.info("HTML does not contain 'appbar' element")
         return []
     carousel = appbar.find("g-scrolling-carousel")
     if not carousel:
+        logger.info("HTML does not contain a Google scrolling carousel")
         return []
 
     return carousel.find_all("a")
 
 
 def parse_item_title(title: str) -> Union[str, str | None]:
-    """Returns a tuple containing the carousel item's name and extensions from a given `title` attribute."""
+    """Returns a tuple containing the carousel item's name and extensions from a given `title` attribute.
+    Expected values follow "{name} ({extensions})" format.
+    """
     pattern = r"^(.*?)(?:\s*\((.*?)\))?$"
     match = re.match(pattern, title)
     name, year = match.groups()
@@ -83,6 +95,7 @@ def get_carousel_item_image(tag: Tag, images) -> str | None:
 def build_carousel_item(tag: Tag, images: dict[str, str]) -> CarouselItem:
     """Returns a CarouselItem from the given carousel item tag and array of thumbnail images."""
     title = tag.attrs["title"]
+    logger.info(f"Scraping carousel item '{title}'")
     name, year = parse_item_title(title)
     href = tag.attrs.get("href", None)
     link = f"https://www.google.com{href}"
@@ -95,7 +108,9 @@ def parse_google_result_page(html: str) -> list[CarouselItem]:
     soup = BeautifulSoup(html, "html.parser")
 
     images = gather_carousel_image_sources(soup)
+    logger.info(f"Gathered {len(images)} thumbnail images in script tags")
     carousel_item_tags = gather_carousel_item_tags(soup)
+    logger.info(f"Gathered {len(carousel_item_tags)} carousel items in HTML")
 
     results = []
     for carousel_item_tag in carousel_item_tags:
@@ -113,11 +128,23 @@ def save_results_to_json(results: list[CarouselItem], output_file: str):
 
 def process_html_file(input_file: str, output_file: str):
     """Scrapes given HTML file for CarouselItems and writes results as JSON to given output file."""
-    with open(input_file, "r") as f:
-        html = f.read()
+    try:
+        with open(input_file, "r") as f:
+            html = f.read()
+    except FileNotFoundError:
+        logger.error(f"Input file '{input_file}' not found.")
+        return
+    except IOError:
+        logger.error(f"Unable to read input file '{input_file}'.")
+        return
 
     results = parse_google_result_page(html)
-    save_results_to_json(results, output_file)
+
+    try:
+        save_results_to_json(results, output_file)
+    except IOError:
+        logger.error(f"Unable to write output file '{output_file}'.")
+        return
 
 
 def main():
@@ -128,7 +155,16 @@ def main():
     parser.add_argument("output_file", help="Path to the output JSON file")
     args = parser.parse_args()
 
+    if not args.input_file.endswith(".html"):
+        logger.error("Input file must be an HTML file.")
+        return
+
+    if not args.output_file.endswith(".json"):
+        logger.error("Output file must be a JSON file.")
+        return
+
     process_html_file(args.input_file, args.output_file)
+    logger.info("Done")
 
 
 if __name__ == "__main__":
